@@ -1,0 +1,7 @@
+/home/administrator/Desktop/sheen/CMakeFiles/sheen.dir
+/home/administrator/Desktop/sheen/CMakeFiles/edit_cache.dir
+/home/administrator/Desktop/sheen/CMakeFiles/rebuild_cache.dir
+/home/administrator/Desktop/sheen/cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir
+/home/administrator/Desktop/sheen/cmake/stm32cubemx/CMakeFiles/USB_Device_Library.dir
+/home/administrator/Desktop/sheen/cmake/stm32cubemx/CMakeFiles/edit_cache.dir
+/home/administrator/Desktop/sheen/cmake/stm32cubemx/CMakeFiles/rebuild_cache.dir
