@@ -111,29 +111,29 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   
 
-  Task 1
-  int x = 42;
-  float y = 3.14f;
+  // Task 1
+  // int x = 42;
+  // float y = 3.14f;
 
   // //Task 2
-  // int a = 2, b = 3;
+  int a = 2, b = 3;
 
-  //   int LHS = (a + b) * (a + b);
-  //   int RHS = (a * a) + (b * b) + (2 * a * b);
+    int LHS = (a + b) * (a + b);
+    int RHS = (a * a) + (b * b) + (2 * a * b);
 
 
   while (1){
   //task 2
-  // myPrintf("a = %d, b = %d\r\n", a, b);
-  //   myPrintf("LHS: %d\r\n", LHS);
-  //   myPrintf("RHS: %d\r\n", RHS);
+  myPrintf("a = %d, b = %d\r\n", a, b);
+    myPrintf("LHS: %d\r\n", LHS);
+    myPrintf("RHS: %d\r\n", RHS);
 
-  //   if (LHS == RHS)
-  //       myPrintf("Identity Verified: Yes\r\n");
-  //   else
-  //       myPrintf("Identity Verified: No\r\n");
+    if (LHS == RHS)
+        myPrintf("Identity Verified: Yes\r\n");
+    else
+        myPrintf("Identity Verified: No\r\n");
     /* USER CODE END WHILE */
-    myPrintf("Value of x = %d, y = %.2f\r\n", x, y); // task1
+    // myPrintf("Value of x = %d, y = %.2f\r\n", x, y); // task1
     HAL_Delay(1000); //task 1 and 2
     /* USER CODE BEGIN 3 */
  
