@@ -123,7 +123,7 @@ int main(void)
 
 
   while (1){
-    //task 2
+  //task 2
   // myPrintf("a = %d, b = %d\r\n", a, b);
   //   myPrintf("LHS: %d\r\n", LHS);
   //   myPrintf("RHS: %d\r\n", RHS);
