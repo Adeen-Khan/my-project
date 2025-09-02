@@ -111,9 +111,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   
 
-  // Task 1
-  // int x = 42;
-  // float y = 3.14f;
+  Task 1
+  int x = 42;
+  float y = 3.14f;
 
   // //Task 2
   // int a = 2, b = 3;
@@ -133,8 +133,8 @@ int main(void)
   //   else
   //       myPrintf("Identity Verified: No\r\n");
     /* USER CODE END WHILE */
-    // myPrintf("Value of x = %d, y = %.2f\r\n", x, y); // task1
-     //HAL_Delay(1000); //task 1 and 2
+    myPrintf("Value of x = %d, y = %.2f\r\n", x, y); // task1
+    HAL_Delay(1000); //task 1 and 2
     /* USER CODE BEGIN 3 */
  
 
