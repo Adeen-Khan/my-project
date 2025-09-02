@@ -116,51 +116,51 @@ int main(void)
   // float y = 3.14f;
 
   // //Task 2
-  int a = 2, b = 3;
+  // int a = 2, b = 3;
 
-    int LHS = (a + b) * (a + b);
-    int RHS = (a * a) + (b * b) + (2 * a * b);
+  //   int LHS = (a + b) * (a + b);
+  //   int RHS = (a * a) + (b * b) + (2 * a * b);
 
 
   while (1){
   //task 2
-  myPrintf("a = %d, b = %d\r\n", a, b);
-    myPrintf("LHS: %d\r\n", LHS);
-    myPrintf("RHS: %d\r\n", RHS);
+  // myPrintf("a = %d, b = %d\r\n", a, b);
+  //   myPrintf("LHS: %d\r\n", LHS);
+  //   myPrintf("RHS: %d\r\n", RHS);
 
-    if (LHS == RHS)
-        myPrintf("Identity Verified: Yes\r\n");
-    else
-        myPrintf("Identity Verified: No\r\n");
+  //   if (LHS == RHS)
+  //       myPrintf("Identity Verified: Yes\r\n");
+  //   else
+  //       myPrintf("Identity Verified: No\r\n");
     /* USER CODE END WHILE */
     // myPrintf("Value of x = %d, y = %.2f\r\n", x, y); // task1
-    HAL_Delay(1000); //task 1 and 2
+    // HAL_Delay(1000); //task 1 and 2
     /* USER CODE BEGIN 3 */
  
 
 
     //task 3
-    // char str[] = "Microcontrollers";
-    // int key = 8774;   
-    // int len = strlen(str);
+    char str[] = "Microcontrollers";
+    int key = 8774;   
+    int len = strlen(str);
 
-    // myPrintf("Original: %s\r\n", str);
+    myPrintf("Original: %s\r\n", str);
 
-    // myPrintf("Encrypted (ASCII): ");
-    // for (int i = 0; i < len; i++) {
-    //     unsigned char ch = str[i] + (key % 256);
-    //     myPrintf("%d ", ch);   
-    //     str[i] = ch;           
-    // }
-    // myPrintf("\r\n");
+    myPrintf("Encrypted (ASCII): ");
+    for (int i = 0; i < len; i++) {
+        unsigned char ch = str[i] + (key % 256);
+        myPrintf("%d ", ch);   
+        str[i] = ch;           
+    }
+    myPrintf("\r\n");
 
-    // for (int i = 0; i < len; i++) {
-    //     str[i] = str[i] - (key % 256);
-    // }
+    for (int i = 0; i < len; i++) {
+        str[i] = str[i] - (key % 256);
+    }
 
-    // myPrintf("Decrypted: %s\r\n", str);
+    myPrintf("Decrypted: %s\r\n", str);
 
-    // HAL_Delay(500);
+    HAL_Delay(500);
 
 
   }
