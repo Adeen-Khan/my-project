@@ -35,7 +35,7 @@ rule C_COMPILER__sheen2.2e1_unscanned_Debug
 # Rule for linking C executable.
 
 rule C_EXECUTABLE_LINKER__sheen2.2e1_Debug
-  command = $PRE_LINK && /home/administrator/st/stm32cubeclt_1.19.0_2/GNU-tools-for-STM32/bin/arm-none-eabi-gcc $FLAGS -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -T "/home/administrator/Desktop/sheen2.1/STM32F303XX_FLASH.ld" --specs=nano.specs -Wl,-Map=sheen2.1.map -Wl,--gc-sections -Wl,--start-group -lc -lm -Wl,--end-group -Wl,--print-memory-usage $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD
+  command = $PRE_LINK && /home/administrator/st/stm32cubeclt_1.19.0_2/GNU-tools-for-STM32/bin/arm-none-eabi-gcc $FLAGS -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -T "/home/administrator/my-project/sheen2.1/STM32F303XX_FLASH.ld" --specs=nano.specs -Wl,-Map=sheen2.1.map -Wl,--gc-sections -Wl,--start-group -lc -lm -Wl,--end-group -Wl,--print-memory-usage $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD
   description = Linking C executable $TARGET_FILE
   restat = $RESTAT
 
@@ -62,7 +62,7 @@ rule C_COMPILER__STM32_Drivers_unscanned_Debug
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = /home/administrator/st/stm32cubeclt_1.19.0_2/CMake/bin/cmake --regenerate-during-build -S/home/administrator/Desktop/sheen2.1 -B/home/administrator/Desktop/sheen2.1/build/Debug
+  command = /home/administrator/st/stm32cubeclt_1.19.0_2/CMake/bin/cmake --regenerate-during-build -S/home/administrator/my-project/sheen2.1 -B/home/administrator/my-project/sheen2.1/build/Debug
   description = Re-running CMake...
   generator = 1
 

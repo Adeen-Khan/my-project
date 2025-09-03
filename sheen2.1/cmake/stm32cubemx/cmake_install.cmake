@@ -1,4 +1,4 @@
-# Install script for directory: /home/administrator/Desktop/sheen2.1/cmake/stm32cubemx
+# Install script for directory: /home/administrator/my-project/sheen2.1/cmake/stm32cubemx
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

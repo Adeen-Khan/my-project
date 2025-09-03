@@ -60,14 +60,14 @@
 				{
 					"directoryIndex" : 1,
 					"id" : "STM32_Drivers::@768a070a0fe75716b479",
-					"jsonFile" : "target-STM32_Drivers-Debug-6e400de6aa3da5a6d140.json",
+					"jsonFile" : "target-STM32_Drivers-Debug-b9bb4daf987419f4f3ab.json",
 					"name" : "STM32_Drivers",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
 					"id" : "sheen2.1::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-sheen2.1-Debug-43ff0f356bd55a76864a.json",
+					"jsonFile" : "target-sheen2.1-Debug-aa149e92006c0f1223ed.json",
 					"name" : "sheen2.1",
 					"projectIndex" : 0
 				}
@@ -77,8 +77,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "/home/administrator/Desktop/sheen2.1/build/Debug",
-		"source" : "/home/administrator/Desktop/sheen2.1"
+		"build" : "/home/administrator/my-project/sheen2.1/build/Debug",
+		"source" : "/home/administrator/my-project/sheen2.1"
 	},
 	"version" : 
 	{

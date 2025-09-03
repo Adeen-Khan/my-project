@@ -109,7 +109,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : " -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -Wextra -Wpedantic -fdata-sections -ffunction-sections -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -Wextra -Wpedantic -fdata-sections -ffunction-sections -O0 -g3 -std=gnu11"
+					"fragment" : " -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -Wextra -Wpedantic -fdata-sections -ffunction-sections -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -Wextra -Wpedantic -fdata-sections -ffunction-sections -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard  -Wall -Wextra -Wpedantic -fdata-sections -ffunction-sections -O0 -g3 -std=gnu11"
 				}
 			],
 			"defines" : 
@@ -131,23 +131,23 @@
 			[
 				{
 					"backtrace" : 2,
-					"path" : "/home/administrator/Desktop/sheen2.1/Core/Inc"
+					"path" : "/home/administrator/my-project/sheen2.1/Core/Inc"
 				},
 				{
 					"backtrace" : 2,
-					"path" : "/home/administrator/Desktop/sheen2.1/Drivers/STM32F3xx_HAL_Driver/Inc"
+					"path" : "/home/administrator/my-project/sheen2.1/Drivers/STM32F3xx_HAL_Driver/Inc"
 				},
 				{
 					"backtrace" : 2,
-					"path" : "/home/administrator/Desktop/sheen2.1/Drivers/STM32F3xx_HAL_Driver/Inc/Legacy"
+					"path" : "/home/administrator/my-project/sheen2.1/Drivers/STM32F3xx_HAL_Driver/Inc/Legacy"
 				},
 				{
 					"backtrace" : 2,
-					"path" : "/home/administrator/Desktop/sheen2.1/Drivers/CMSIS/Device/ST/STM32F3xx/Include"
+					"path" : "/home/administrator/my-project/sheen2.1/Drivers/CMSIS/Device/ST/STM32F3xx/Include"
 				},
 				{
 					"backtrace" : 2,
-					"path" : "/home/administrator/Desktop/sheen2.1/Drivers/CMSIS/Include"
+					"path" : "/home/administrator/my-project/sheen2.1/Drivers/CMSIS/Include"
 				}
 			],
 			"language" : "C",

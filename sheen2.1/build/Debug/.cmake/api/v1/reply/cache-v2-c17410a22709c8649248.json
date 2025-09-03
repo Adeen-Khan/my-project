@@ -179,7 +179,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/administrator/Desktop/sheen2.1/build/Debug"
+			"value" : "/home/administrator/my-project/sheen2.1/build/Debug"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -619,7 +619,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/administrator/Desktop/sheen2.1/build/Debug/CMakeFiles/pkgRedirects"
+			"value" : "/home/administrator/my-project/sheen2.1/build/Debug/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -679,7 +679,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/administrator/Desktop/sheen2.1"
+			"value" : "/home/administrator/my-project/sheen2.1"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -1155,11 +1155,11 @@
 			[
 				{
 					"name" : "HELPSTRING",
-					"value" : "No help, variable specified on the command line."
+					"value" : "The CMake toolchain file"
 				}
 			],
-			"type" : "UNINITIALIZED",
-			"value" : "/home/administrator/Desktop/sheen2.1/cmake/gcc-arm-none-eabi.cmake"
+			"type" : "FILEPATH",
+			"value" : "/home/administrator/my-project/sheen2.1/cmake/gcc-arm-none-eabi.cmake"
 		},
 		{
 			"name" : "CMAKE_UNAME",
@@ -1199,7 +1199,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/administrator/Desktop/sheen2.1/build/Debug"
+			"value" : "/home/administrator/my-project/sheen2.1/build/Debug"
 		},
 		{
 			"name" : "sheen2.1_IS_TOP_LEVEL",
@@ -1223,7 +1223,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/administrator/Desktop/sheen2.1"
+			"value" : "/home/administrator/my-project/sheen2.1"
 		}
 	],
 	"kind" : "cache",
