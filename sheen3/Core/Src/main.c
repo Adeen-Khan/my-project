@@ -15,7 +15,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include <stdlib.h> 
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -64,7 +63,7 @@ static const uint8_t HEX_TO_SEG[16] = {
 };
 
 
-//#define COUNTER_BASE 10
+#define COUNTER_BASE 10
 
 
 typedef struct {
@@ -128,13 +127,11 @@ int main(void)
   MX_USB_PCD_Init();
 
   /* USER CODE BEGIN 2 */
-  srand(HAL_GetTick());
-
   uint8_t val = 0;                  
   display_digit(val);
 
   Debounce inc = {0,0,0};           
-  //Debounce dec = {0,0,0};           
+  Debounce dec = {0,0,0};           
   const uint32_t DEBOUNCE_MS = 30;  
   /* USER CODE END 2 */
 
@@ -145,21 +142,21 @@ int main(void)
 
     
     uint8_t inc_edge = debounce_update(&inc, read_btn(GPIOA, GPIO_PIN_0), now, DEBOUNCE_MS);
-    //uint8_t dec_edge = debounce_update(&dec, read_btn(GPIOB, GPIO_PIN_5), now, DEBOUNCE_MS);
+    uint8_t dec_edge = debounce_update(&dec, read_btn(GPIOB, GPIO_PIN_5), now, DEBOUNCE_MS);
 
     if (inc_edge) {
-      val = (rand()%6)+1;
+      val = (val + 1) % COUNTER_BASE;
       display_digit(val);
     }
-    //if (dec_edge) {
-      // val = (val + COUNTER_BASE - 1) % COUNTER_BASE;
-      // display_digit(val);
+    if (dec_edge) {
+      val = (val + COUNTER_BASE - 1) % COUNTER_BASE;
+      display_digit(val);
     }
 
     HAL_Delay(1);
     /* USER CODE END 3 */
   }
-//}
+}
 
 /**
   * @brief System Clock Configuration
