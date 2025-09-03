@@ -5,19 +5,17 @@
   * @brief          : Main program body
   ******************************************************************************
   * @attention
-  *
   * Copyright (c) 2025 STMicroelectronics.
   * All rights reserved.
-  *
   * This software is licensed under terms that can be found in the LICENSE file
   * in the root directory of this software component.
   * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
   ******************************************************************************
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include <stdlib.h> 
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -53,51 +51,63 @@ static void MX_USB_PCD_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-#define SEG_PORT_A GPIOA            
-#define SEG_PORT_B GPIOB            
+
+#define SEG_PORT_A GPIOA           
+#define SEG_PORT_B GPIOB         
+
 
 static const uint8_t HEX_TO_SEG[16] = {
-  0x40, // 0
-  0x79, // 1
-  0x24, // 2
-  0x30, // 3
-  0x19, // 4
-  0x12, // 5
-  0x02, // 6
-  0x78, // 7
-  0x00, // 8
-  0x10, // 9
-  0x08, // A
-  0x03, // b
-  0x46, // C
-  0x21, // d
-  0x06, // E
-  0x0E  // F
+  0x40,0x79,0x24,0x30,
+  0x19,0x12,0x02,0x78,
+  0x00,0x10,0x08,0x03,
+  0x46,0x21,0x06,0x0E
 };
 
 
-static const uint8_t STUDENT_ID[] = { 9,2,0,1 }; 
-#define ID_LEN  (sizeof(STUDENT_ID)/sizeof(STUDENT_ID[0]))
+//#define COUNTER_BASE 10
 
-static inline uint8_t user_button_pressed(void) {
-  return (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET);
+
+typedef struct {
+  uint8_t  last_read;
+  uint8_t  state;       
+  uint32_t last_change;  
+} Debounce;
+
+static inline uint8_t read_btn(GPIO_TypeDef* port, uint16_t pin) {
+
+  return (HAL_GPIO_ReadPin(port, pin) == GPIO_PIN_SET);
+}
+
+
+static uint8_t debounce_update(Debounce* d, uint8_t reading, uint32_t now, uint32_t thr_ms) {
+  uint8_t edge = 0;
+  if (reading != d->last_read) d->last_change = now;
+  if ((now - d->last_change) > thr_ms) {
+    if (reading != d->state) {
+      d->state = reading;
+      if (d->state) edge = 1;   // pressed
+    }
+  }
+  d->last_read = reading;
+  return edge;
 }
 
 
 static inline void seg_write_raw(uint8_t segs_7bit, uint8_t dp_on)
 {
+ 
   uint8_t out = (segs_7bit & 0x7F) | ((dp_on ? 0U : 1U) << 7);
 
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, (out & (1<<0)) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, (out & (1<<1)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // b
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, (out & (1<<2)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // c
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, (out & (1<<3)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // d
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, (out & (1<<4)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // e
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, (out & (1<<5)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // f
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, (out & (1<<6)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // g
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, (out & (1<<7)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // dp
-}
 
+  HAL_GPIO_WritePin(SEG_PORT_B, GPIO_PIN_0, (out & (1 << 0)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // a 
+  HAL_GPIO_WritePin(SEG_PORT_A, GPIO_PIN_2, (out & (1 << 1)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // b
+  HAL_GPIO_WritePin(SEG_PORT_A, GPIO_PIN_5, (out & (1 << 2)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // c
+  HAL_GPIO_WritePin(SEG_PORT_A, GPIO_PIN_1, (out & (1 << 3)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // d
+  HAL_GPIO_WritePin(SEG_PORT_A, GPIO_PIN_3, (out & (1 << 4)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // e
+  HAL_GPIO_WritePin(SEG_PORT_A, GPIO_PIN_4, (out & (1 << 5)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // f
+  HAL_GPIO_WritePin(SEG_PORT_A, GPIO_PIN_6, (out & (1 << 6)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // g
+  HAL_GPIO_WritePin(SEG_PORT_A, GPIO_PIN_7, (out & (1 << 7)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // dp
+}
 
 static inline void display_digit(uint8_t d) {
   seg_write_raw(HEX_TO_SEG[d % 16], 0 /* dp off */);
@@ -118,42 +128,38 @@ int main(void)
   MX_USB_PCD_Init();
 
   /* USER CODE BEGIN 2 */
-  uint8_t idx = 0;
-  display_digit(STUDENT_ID[idx]);
+  srand(HAL_GetTick());
 
-  uint8_t last_read = 0;            
-  uint8_t btn_state = 0;            
-  uint32_t last_change_ms = 0;
+  uint8_t val = 0;                  
+  display_digit(val);
+
+  Debounce inc = {0,0,0};           
+  //Debounce dec = {0,0,0};           
   const uint32_t DEBOUNCE_MS = 30;  
-  
   /* USER CODE END 2 */
 
-  /* Infinite loop */
   while (1)
   {
     /* USER CODE BEGIN 3 */
-    uint8_t reading = user_button_pressed();
     uint32_t now = HAL_GetTick();
 
-    if (reading != last_read) {
-      last_change_ms = now; 
+    
+    uint8_t inc_edge = debounce_update(&inc, read_btn(GPIOA, GPIO_PIN_0), now, DEBOUNCE_MS);
+    //uint8_t dec_edge = debounce_update(&dec, read_btn(GPIOB, GPIO_PIN_5), now, DEBOUNCE_MS);
+
+    if (inc_edge) {
+      val = (rand()%6)+1;
+      display_digit(val);
+    }
+    //if (dec_edge) {
+      // val = (val + COUNTER_BASE - 1) % COUNTER_BASE;
+      // display_digit(val);
     }
 
-    if ((now - last_change_ms) > DEBOUNCE_MS) {
-      if (reading != btn_state) {
-        btn_state = reading;
-        if (btn_state) { 
-          idx = (idx + 1) % ID_LEN;  
-          display_digit(STUDENT_ID[idx]);
-        }
-      }
-    }
-
-    last_read = reading;
     HAL_Delay(1);
     /* USER CODE END 3 */
   }
-}
+//}
 
 /**
   * @brief System Clock Configuration
@@ -240,10 +246,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
+  /* GPIOE (unchanged) */
   HAL_GPIO_WritePin(GPIOE, CS_I2C_SPI_Pin|LD4_Pin|LD3_Pin|LD5_Pin
                           |LD7_Pin|LD9_Pin|LD10_Pin|LD8_Pin
                           |LD6_Pin, GPIO_PIN_RESET);
-
   GPIO_InitStruct.Pin = CS_I2C_SPI_Pin|LD4_Pin|LD3_Pin|LD5_Pin
                           |LD7_Pin|LD9_Pin|LD10_Pin|LD8_Pin
                           |LD6_Pin;
@@ -252,18 +258,24 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-
   
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|
                             GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET); // 'a'
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET); // 'a' OFF
 
-
+  
   GPIO_InitStruct.Pin = GPIO_PIN_0;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  // PB5 external button as input with pulldown (active-HIGH when pressed)
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  // PA1..PA7 outputs (b..g, dp)
   GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|
                         GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -271,6 +283,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  // PB0 output ('a')
   GPIO_InitStruct.Pin = GPIO_PIN_0;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
