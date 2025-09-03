@@ -53,11 +53,9 @@ static void MX_USB_PCD_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-// ====== CONFIG ======
-#define SEG_PORT_A GPIOA            // b..g, dp on GPIOA
-#define SEG_PORT_B GPIOB            // a on PB0
+#define SEG_PORT_A GPIOA            
+#define SEG_PORT_B GPIOB            
 
-// --- Professor's ACTIVE-LOW LUT (0 = ON, 1 = OFF), bit0=a ... bit6=g ---
 static const uint8_t HEX_TO_SEG[16] = {
   0x40, // 0
   0x79, // 1
@@ -77,24 +75,20 @@ static const uint8_t HEX_TO_SEG[16] = {
   0x0E  // F
 };
 
-// --- Task 2: Student ID digits (CHANGE THESE TO YOUR ID) ---
-static const uint8_t STUDENT_ID[] = { 9,2,0,1 }; // <-- replace with your actual ID digits
+
+static const uint8_t STUDENT_ID[] = { 9,2,0,1 }; 
 #define ID_LEN  (sizeof(STUDENT_ID)/sizeof(STUDENT_ID[0]))
 
-// On most STM32 boards with PA0 user button: pressed = HIGH. Invert if needed.
 static inline uint8_t user_button_pressed(void) {
   return (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET);
 }
 
-// Drive segments given 7-bit mask (a..g) and dp flag (active-low logic)
+
 static inline void seg_write_raw(uint8_t segs_7bit, uint8_t dp_on)
 {
-  // ACTIVE-LOW: 0=ON, 1=OFF ; bit0=a ... bit6=g ; bit7=dp
   uint8_t out = (segs_7bit & 0x7F) | ((dp_on ? 0U : 1U) << 7);
 
-  // a on PB0
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, (out & (1<<0)) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-  // b..g, dp on GPIOA
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, (out & (1<<1)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // b
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, (out & (1<<2)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // c
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, (out & (1<<3)) ? GPIO_PIN_SET : GPIO_PIN_RESET); // d
@@ -117,7 +111,6 @@ static inline void display_digit(uint8_t d) {
   */
 int main(void)
 {
-  /* MCU Configuration--------------------------------------------------------*/
   HAL_Init();
   SystemClock_Config();
   MX_GPIO_Init();
@@ -125,14 +118,13 @@ int main(void)
   MX_USB_PCD_Init();
 
   /* USER CODE BEGIN 2 */
-  // --- Task 2: show first digit, then advance on each button press (debounced) ---
   uint8_t idx = 0;
   display_digit(STUDENT_ID[idx]);
 
-  uint8_t last_read = 0;            // last raw sample
-  uint8_t btn_state = 0;            // debounced stable state
+  uint8_t last_read = 0;            
+  uint8_t btn_state = 0;            
   uint32_t last_change_ms = 0;
-  const uint32_t DEBOUNCE_MS = 30;  // 20–40ms typical
+  const uint32_t DEBOUNCE_MS = 30;  
   
   /* USER CODE END 2 */
 
@@ -144,14 +136,14 @@ int main(void)
     uint32_t now = HAL_GetTick();
 
     if (reading != last_read) {
-      last_change_ms = now; // input toggled: restart debounce timer
+      last_change_ms = now; 
     }
 
     if ((now - last_change_ms) > DEBOUNCE_MS) {
       if (reading != btn_state) {
         btn_state = reading;
-        if (btn_state) { // rising edge (pressed)
-          idx = (idx + 1) % ID_LEN;   // next digit, wrap to start
+        if (btn_state) { 
+          idx = (idx + 1) % ID_LEN;  
           display_digit(STUDENT_ID[idx]);
         }
       }
@@ -248,7 +240,6 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  /* GPIOE (unchanged) */
   HAL_GPIO_WritePin(GPIOE, CS_I2C_SPI_Pin|LD4_Pin|LD3_Pin|LD5_Pin
                           |LD7_Pin|LD9_Pin|LD10_Pin|LD8_Pin
                           |LD6_Pin, GPIO_PIN_RESET);
@@ -261,20 +252,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  // ==== Our seven-seg pins ====
 
-  // Initial levels: OFF at boot (ACTIVE-LOW → drive HIGH)
+  
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|
                             GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET); // 'a'
 
-  // PA0 as USER BUTTON input
+
   GPIO_InitStruct.Pin = GPIO_PIN_0;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL; // use GPIO_PULLDOWN if floating
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  // PA1..PA7 as outputs for b..g,dp
   GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|
                         GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -282,7 +271,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  // PB0 as output for 'a'
   GPIO_InitStruct.Pin = GPIO_PIN_0;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
