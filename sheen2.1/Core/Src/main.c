@@ -163,38 +163,74 @@ while (1){
 // HAL_Delay(500);
 
 //task 4:
-int A[2][2] = { {1, 2}, {3, 4} };
-    int B[2][2] = { {5, 6}, {7, 8} };
-    int C[2][2] = { {0, 0}, {0, 0} };
+// int A[2][2] = { {1, 2}, {3, 4} };
+//     int B[2][2] = { {5, 6}, {7, 8} };
+//     int C[2][2] = { {0, 0}, {0, 0} };
 
 
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 2; j++) {
-            int sum = 0;
-            for (int k = 0; k < 2; k++) {
-                sum += A[i][k] * B[k][j];
-            }
-            C[i][j] = sum;
+//     for (int i = 0; i < 2; i++) {
+//         for (int j = 0; j < 2; j++) {
+//             int sum = 0;
+//             for (int k = 0; k < 2; k++) {
+//                 sum += A[i][k] * B[k][j];
+//             }
+//             C[i][j] = sum;
+//         }
+//     }myPrintf("Armstrong Numbers between 100 and 999:\r\n");
+
+    for (int num = 100; num <= 999; num++) {
+        int original = num;
+        int sum = 0;
+
+        int d1 = num % 10;         // last digit
+        int d2 = (num / 10) % 10;  // middle digit
+        int d3 = num / 100;        // first digit
+
+        sum = (d1 * d1 * d1) + (d2 * d2 * d2) + (d3 * d3 * d3);
+
+        if (sum == original) {
+            myPrintf("%d\r\n", original);
         }
     }
 
-    // Print Matrix A
-    myPrintf("Matrix A:\r\n");
-    myPrintf("[ %d  %d ]\r\n", A[0][0], A[0][1]);
-    myPrintf("[ %d  %d ]\r\n\r\n", A[1][0], A[1][1]);
-
-    // Print Matrix B
-    myPrintf("Matrix B:\r\n");
-    myPrintf("[ %d  %d ]\r\n", B[0][0], B[0][1]);
-    myPrintf("[ %d  %d ]\r\n\r\n", B[1][0], B[1][1]);
-
-    // Print Resultant Matrix C
-    myPrintf("C = A * B:\r\n");
-    myPrintf("[ %d  %d ]\r\n", C[0][0], C[0][1]);
-    myPrintf("[ %d  %d ]\r\n\r\n", C[1][0], C[1][1]);
-
     HAL_Delay(2000);
 
+//     // Print Matrix A
+//     myPrintf("Matrix A:\r\n");
+//     myPrintf("[ %d  %d ]\r\n", A[0][0], A[0][1]);
+//     myPrintf("[ %d  %d ]\r\n\r\n", A[1][0], A[1][1]);
+
+//     // Print Matrix B
+//     myPrintf("Matrix B:\r\n");
+//     myPrintf("[ %d  %d ]\r\n", B[0][0], B[0][1]);
+//     myPrintf("[ %d  %d ]\r\n\r\n", B[1][0], B[1][1]);
+
+//     // Print Resultant Matrix C
+//     myPrintf("C = A * B:\r\n");
+//     myPrintf("[ %d  %d ]\r\n", C[0][0], C[0][1]);
+//     myPrintf("[ %d  %d ]\r\n\r\n", C[1][0], C[1][1]);
+
+//     HAL_Delay(2000);
+
+//task 5
+myPrintf("Armstrong Numbers between 100 and 999:\r\n");
+
+    for (int num = 100; num <= 999; num++) {
+        int original = num;
+        int sum = 0;
+
+        int d1 = num % 10;         
+        int d2 = (num / 10) % 10;  
+        int d3 = num / 100;        
+
+        sum = (d1 * d1 * d1) + (d2 * d2 * d2) + (d3 * d3 * d3);
+
+        if (sum == original) {
+            myPrintf("%d\r\n", original);
+        }
+    }
+
+    HAL_Delay(500);
 
 
 }
