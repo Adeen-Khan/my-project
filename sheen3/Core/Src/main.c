@@ -243,7 +243,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  /* GPIOE (unchanged) */
+ 
   HAL_GPIO_WritePin(GPIOE, CS_I2C_SPI_Pin|LD4_Pin|LD3_Pin|LD5_Pin
                           |LD7_Pin|LD9_Pin|LD10_Pin|LD8_Pin
                           |LD6_Pin, GPIO_PIN_RESET);
