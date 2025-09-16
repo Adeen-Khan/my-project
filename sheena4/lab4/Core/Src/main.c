@@ -18,14 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stm32f3xx_it.h"
-
-extern TIM_HandleTypeDef htim2;
-
-void TIM2_IRQHandler(void)
-{
-  HAL_TIM_IRQHandler(&htim2);   // <-- REQUIRED: routes IRQ to HAL, which calls HAL_TIM_PeriodElapsedCallback
-}
 
 
 /* Private includes ----------------------------------------------------------*/
@@ -124,16 +116,13 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
-  HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(TIM2_IRQn);
-  HAL_TIM_Base_Start_IT(&htim2);   // start TIM2 in interrupt mode (1 s period)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
-    //HAL_GPIO_TogglePin(GPIOE, LD10_Pin);  // choose any LDx you like
-    //delay_ms(1000);  
+    HAL_GPIO_TogglePin(GPIOE, LD10_Pin);  // choose any LDx you like
+    delay_ms(1000);  
 
     /* USER CODE BEGIN 3 */
   }
@@ -297,7 +286,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 47999;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 999;
+  htim2.Init.Period = 0xFFFFFF;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
