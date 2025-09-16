@@ -109,7 +109,7 @@ static inline void seg_write_raw(uint8_t segs_7bit, uint8_t dp_on)
 }
 
 static inline void display_digit(uint8_t d) {
-  seg_write_raw(HEX_TO_SEG[d % 16], 0 /* dp off */);
+  seg_write_raw(HEX_TO_SEG[d % 16], 0);
 }
 
 /* USER CODE END 0 */

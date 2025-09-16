@@ -111,8 +111,8 @@ MX_USB_PCD_Init();
 /* USER CODE BEGIN WHILE */
 
 // Task 1
-// int x = 42;
-// float y = 3.14f;
+int x = 42;
+float y = 3.14f;
 
 // //Task 2
 // int a = 2, b = 3;
@@ -134,8 +134,8 @@ while (1){
 // else
 // myPrintf("Identity Verified: No\r\n");
 /* USER CODE END WHILE */
-// myPrintf("Value of x = %d, y = %.2f\r\n", x, y); // task1
-//HAL_Delay(1000); //task 1 and 2
+myPrintf("Value of x = %d, y = %.2f\r\n", x, y); // task1
+HAL_Delay(1000); //task 1 and 2
 /* USER CODE BEGIN 3 */
 
 
@@ -176,7 +176,7 @@ while (1){
 //             }
 //             C[i][j] = sum;
 //         }
-//     }myPrintf("Armstrong Numbers between 100 and 999:\r\n");
+//     }myPrintf("Armstrong Numbers betweesudo screen/dev/ttyUSB0 115200n 100 and 999:\r\n");
 
     for (int num = 100; num <= 999; num++) {
         int original = num;
