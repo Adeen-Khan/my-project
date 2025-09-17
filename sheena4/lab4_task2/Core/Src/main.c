@@ -31,7 +31,10 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+// task 3
+#define THRESH_A_MS 500   //1 Hz
+#define THRESH_B_MS 200   //2.5 Hz
+#define THRESH_C_MS 100   //5 Hz
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -49,7 +52,10 @@ TIM_HandleTypeDef htim2;
 PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
-
+//task3
+static volatile uint16_t cntA = 0;
+static volatile uint16_t cntB = 0;
+static volatile uint16_t cntC = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,7 +108,8 @@ int main(void)
   MX_TIM2_Init();
   MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
-  HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
+  //task 2 and 3
+  HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0); 
   HAL_NVIC_EnableIRQ(TIM2_IRQn);
   HAL_TIM_Base_Start_IT(&htim2);
 
@@ -274,7 +281,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 47999;
+  htim2.Init.Prescaler = 47; //task3, 47999 for task2
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 999;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -386,12 +393,22 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+//task2
+// void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { 
+//   if (htim->Instance == TIM2) 
+//   { 
+//     HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_13); // PE13 = LD10 
+//   } 
+// }
+//task3
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if (htim->Instance == TIM2)
   {
-    HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_13);   // PE13 = LD10
-  } 
+    if (++cntA >= THRESH_A_MS) { HAL_GPIO_TogglePin(GPIOE, LD10_Pin); cntA = 0; }
+    if (++cntB >= THRESH_B_MS) { HAL_GPIO_TogglePin(GPIOE, LD9_Pin);  cntB = 0; }
+    if (++cntC >= THRESH_C_MS) { HAL_GPIO_TogglePin(GPIOE, LD8_Pin);  cntC = 0; }
+  }
 }
 /* USER CODE END 4 */
 
