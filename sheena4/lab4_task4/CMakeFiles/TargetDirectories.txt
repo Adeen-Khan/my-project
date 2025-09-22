@@ -1,0 +1,6 @@
+/home/administrator/my-project/sheena4/lab4_task4/CMakeFiles/lab4_task4.dir
+/home/administrator/my-project/sheena4/lab4_task4/CMakeFiles/edit_cache.dir
+/home/administrator/my-project/sheena4/lab4_task4/CMakeFiles/rebuild_cache.dir
+/home/administrator/my-project/sheena4/lab4_task4/cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir
+/home/administrator/my-project/sheena4/lab4_task4/cmake/stm32cubemx/CMakeFiles/edit_cache.dir
+/home/administrator/my-project/sheena4/lab4_task4/cmake/stm32cubemx/CMakeFiles/rebuild_cache.dir

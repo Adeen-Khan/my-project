@@ -56,6 +56,7 @@
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3; //task extension
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -210,6 +211,10 @@ void TIM2_IRQHandler(void)
   /* USER CODE BEGIN TIM2_IRQn 1 */
 
   /* USER CODE END TIM2_IRQn 1 */
+}
+void TIM3_IRQHandler(void) //task extension
+{
+  HAL_TIM_IRQHandler(&htim3);
 }
 
 /* USER CODE BEGIN 1 */
