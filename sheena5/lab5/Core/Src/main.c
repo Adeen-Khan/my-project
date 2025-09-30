@@ -48,26 +48,9 @@ PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
 //Task 1
-// const uint32_t top  = 999;   
-// const uint32_t step = 5;
-// const uint32_t ms   = 2;
-
-//task 2
-#define DIR1_GPIO   GPIOB
-#define DIR1_PIN    GPIO_PIN_0
-#define DIR2_GPIO   GPIOB
-#define DIR2_PIN    GPIO_PIN_1
-
-static inline void motor_dir_cw(void)  { HAL_GPIO_WritePin(DIR1_GPIO, DIR1_PIN, GPIO_PIN_SET);   HAL_GPIO_WritePin(DIR2_GPIO, DIR2_PIN, GPIO_PIN_RESET); }
-static inline void motor_dir_ccw(void) { HAL_GPIO_WritePin(DIR1_GPIO, DIR1_PIN, GPIO_PIN_RESET); HAL_GPIO_WritePin(DIR2_GPIO, DIR2_PIN, GPIO_PIN_SET);   }
-static inline void motor_brake(void)   { HAL_GPIO_WritePin(DIR1_GPIO, DIR1_PIN, GPIO_PIN_RESET); HAL_GPIO_WritePin(DIR2_GPIO, DIR2_PIN, GPIO_PIN_RESET); }
-
-static inline void motor_set_duty_percent(uint8_t pct) {
-  if (pct > 100) pct = 100;
-  uint32_t ccr = ((uint32_t)pct * (htim3.Init.Period + 1)) / 100; // ARR=999 -> 0..1000
-  if (ccr > htim3.Init.Period) ccr = htim3.Init.Period;
-  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, ccr);
-}
+const uint32_t top  = 999;   
+const uint32_t step = 5;
+const uint32_t ms   = 2;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -120,13 +103,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   //task 1
-  //HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-
-  //task 2
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-  motor_brake();            // safe on boot
-  motor_set_duty_percent(0);
-
 
   /* USER CODE END 2 */
 
@@ -137,44 +114,21 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//task 1
-//     const uint32_t top = htim3.Init.Period;   
-//     const uint32_t step = 5;
-//     const uint32_t ms   = 2;
-//     for (uint32_t c = 0; c <= top; c += step) {
-//   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, c); 
-//   HAL_Delay(ms);
-// }
+    //task 1
+    const uint32_t top = htim3.Init.Period;   
+    const uint32_t step = 5;
+    const uint32_t ms   = 2;
+    for (uint32_t c = 0; c <= top; c += step) {
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, c); 
+    HAL_Delay(ms);
+    }
 
-//   or (int32_t c = (int32_t)top; c >= 0; c -= (int32_t)step) {
-//   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, (uint32_t)c);
-//   HAL_Delay(ms);
-// }
+    for (int32_t c = (int32_t)top; c >= 0; c -= (int32_t)step) {
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, (uint32_t)c);
+    HAL_Delay(ms);
+    }
   
-    //Task 2
-    uint8_t duty;
-
-    /* CW ramp 0% -> 100% */
-    motor_dir_cw();
-    for (duty = 0; duty <= 100; duty += 5) {
-      motor_set_duty_percent(duty);
-      HAL_Delay(30);
-    }
-    HAL_Delay(400);            // hold
-    motor_set_duty_percent(0); // stop
-    HAL_Delay(300);
-
-    /* CCW ramp 0% -> 100% */
-    motor_dir_ccw();
-    for (duty = 0; duty <= 100; duty += 5) {
-      motor_set_duty_percent(duty);
-      HAL_Delay(30);
-    }
-    HAL_Delay(400);            // hold
-    motor_set_duty_percent(0); // stop
-    HAL_Delay(300);
-
- }
+  }
   /* USER CODE END 3 */
 }
 
@@ -413,16 +367,6 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
-
-  //task 2
-  GPIO_InitStruct.Pin = DIR1_PIN | DIR2_PIN;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(DIR1_GPIO, &GPIO_InitStruct);
-
-  /* Default: brake */
-  motor_brake();
 
   /* USER CODE END MX_GPIO_Init_2 */
 }
