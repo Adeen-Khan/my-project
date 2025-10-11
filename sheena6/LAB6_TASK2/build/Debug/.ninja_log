@@ -16,7 +16,7 @@
 221	453	1759757979797502722	cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart.c.obj	a8ed94b97156323c
 239	401	1759757979744502732	cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart_ex.c.obj	32ee2d8fcc637b7a
 8	350	1759757979691502742	cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_spi.c.obj	6fd73fd796bd036f
-1	24	1759757910349517472	build.ninja	fb0ccc423c07bb01
+1	24	1760182269923588805	build.ninja	fb0ccc423c07bb01
 2	137	1759757979477502783	CMakeFiles/LAB6_TASK2.dir/Core/Src/syscalls.c.obj	8f636dd9899bf7e3
 23	253	1759757979594502761	cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_spi_ex.c.obj	d5871f969c15f2a0
 92	482	1759757979825502717	cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c.obj	51974fa8f053ccc4
