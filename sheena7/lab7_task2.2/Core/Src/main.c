@@ -18,19 +18,25 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdio.h>          // CHANGE: for snprintf (UART CSV)
-#include <string.h>         // CHANGE: for strlen
-#include "arm_math.h"
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
+
+/* USER CODE BEGIN PV */
+volatile uint32_t adc_value = 0;
+volatile uint32_t filtered_value = 0;
+
+static uint32_t filter_buffer[10] = {0};  // 10-point moving avg buffer
+static uint8_t  filter_index = 0;
+/* USER CODE END PV */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#define VREF_VOLTS     3.30f            // CHANGE: counts->volts conversion
-#define ADC_MAX_COUNT  4095.0f          // CHANGE: 12-bit ADC full scale
-#define FILTER_LEN     10
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -50,17 +56,10 @@ I2C_HandleTypeDef hi2c1;
 
 SPI_HandleTypeDef hspi1;
 
-UART_HandleTypeDef huart2;
-
-PCD_HandleTypeDef hpcd_USB_FS;
+UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-static float32_t maBuf[FILTER_LEN];   // circular buffer (volts)
-static uint32_t  maIdx = 0;           // write index 0..FILTER_LEN-1
-static uint8_t   maFilled = 0;        // becomes 1 after first wrap
-static char      uartBuf[64];
-static volatile uint8_t  g_newSample = 0;   // set in ISR when EOC occurs
-static volatile uint32_t g_lastCounts = 0; 
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,24 +68,14 @@ static void MX_GPIO_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_SPI1_Init(void);
-static void MX_USART2_UART_Init(void);
-static void MX_USB_PCD_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-static void MX_NVIC_Init(void);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
-{
-  if (hadc->Instance == ADC1)
-  {
-    HAL_GPIO_TogglePin(GPIOE, LD3_Pin);  // Red LED on F3-Discovery
-    HAL_GPIO_TogglePin(GPIOE, LD4_Pin);  // green LED
-    g_lastCounts = HAL_ADC_GetValue(&hadc1);  // read ADC data register
-    g_newSample  = 1;
-  }
-}
+
 /* USER CODE END 0 */
 
 /**
@@ -119,78 +108,19 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_ADC1_Init();
-  MX_NVIC_Init();
   MX_I2C1_Init();
   MX_SPI1_Init();
-  MX_USART2_UART_Init();
-  MX_USB_PCD_Init();
+  MX_USART1_UART_Init();
+  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
-
-  /* Step 1: Calibrate */
-  if (HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED) != HAL_OK)
-      Error_Handler();
-
-  /* Step 2: Enable ADC and wait for ready */
-  if ((hadc1.Instance->CR & ADC_CR_ADEN) == 0) {
-      __HAL_ADC_ENABLE(&hadc1);
-      HAL_Delay(1); // ensure flag settles
-      while (!__HAL_ADC_GET_FLAG(&hadc1, ADC_FLAG_RDY));
-  }
-
-  /* Step 3: Start ADC in interrupt mode (continuous) */
-  if (HAL_ADC_Start_IT(&hadc1) != HAL_OK)
-      Error_Handler();
-
-  /* Debug blink */
-  HAL_GPIO_TogglePin(GPIOE, LD9_Pin);
-  HAL_Delay(200);
-  HAL_GPIO_TogglePin(GPIOE, LD9_Pin);
-
-  /* UART banner */
-  const char *banner = "ADC IT + MA(10)\r\nraw_mV,avg_mV\r\n";
-  HAL_UART_Transmit(&huart2, (uint8_t*)banner, strlen(banner), 100);
-
-  /* USER CODE END 2 */
-
+  HAL_ADC_Start_IT(&hadc1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
-  { 
-    if (g_newSample) {
-      __disable_irq();                // short critical section
-      uint32_t counts = g_lastCounts;
-      g_newSample = 0;
-      __enable_irq();
-
-      // Convert to volts
-      float32_t v = (counts / ADC_MAX_COUNT) * VREF_VOLTS;
-
-      // Update circular buffer
-      maBuf[maIdx] = v;
-      maIdx = (maIdx + 1u) % FILTER_LEN;
-      if (!maFilled && (maIdx == 0u)) { maFilled = 1u; }
-
-      // 10-point moving average (CMSIS-DSP)
-      float32_t vAvg = v;
-      if (maFilled) {
-        arm_mean_f32(maBuf, FILTER_LEN, &vAvg);
-      }
-
-      // Print as millivolts (integers) -> avoids float printf
-      int raw_mV = (int)(v    * 1000.0f + 0.5f);
-      int avg_mV = (int)(vAvg * 1000.0f + 0.5f);
-      int n = snprintf(uartBuf, sizeof(uartBuf), "%d,%d\r\n", raw_mV, avg_mV);
-      if (n > 0) {
-        HAL_UART_Transmit(&huart2, (uint8_t*)uartBuf, (uint16_t)n, 50);
-      }
-    }
-
-    HAL_Delay(1);
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
+  {
+    
   }
   /* USER CODE END 3 */
 }
@@ -234,9 +164,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_USART2
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_USART1
                               |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_ADC12;
-  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
   PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
   PeriphClkInit.USBClockSelection = RCC_USBCLKSOURCE_PLL;
@@ -245,11 +175,7 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 }
-static void MX_NVIC_Init(void)
-{
-  HAL_NVIC_SetPriority(ADC1_2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
-}
+
 /**
   * @brief ADC1 Initialization Function
   * @param None
@@ -303,7 +229,7 @@ static void MX_ADC1_Init(void)
   sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
-  sConfig.SamplingTime = ADC_SAMPLETIME_61CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
@@ -332,7 +258,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x2000090E;
+  hi2c1.Init.Timing = 0x00201D2B;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -405,68 +331,37 @@ static void MX_SPI1_Init(void)
 }
 
 /**
-  * @brief USART2 Initialization Function
+  * @brief USART1 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART2_UART_Init(void)
+static void MX_USART1_UART_Init(void)
 {
 
-  /* USER CODE BEGIN USART2_Init 0 */
+  /* USER CODE BEGIN USART1_Init 0 */
 
-  /* USER CODE END USART2_Init 0 */
+  /* USER CODE END USART1_Init 0 */
 
-  /* USER CODE BEGIN USART2_Init 1 */
+  /* USER CODE BEGIN USART1_Init 1 */
 
-  /* USER CODE END USART2_Init 1 */
-  huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART2_Init 2 */
+  /* USER CODE BEGIN USART1_Init 2 */
 
-  /* USER CODE END USART2_Init 2 */
-
-}
-
-/**
-  * @brief USB Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USB_PCD_Init(void)
-{
-
-  /* USER CODE BEGIN USB_Init 0 */
-
-  /* USER CODE END USB_Init 0 */
-
-  /* USER CODE BEGIN USB_Init 1 */
-
-  /* USER CODE END USB_Init 1 */
-  hpcd_USB_FS.Instance = USB;
-  hpcd_USB_FS.Init.dev_endpoints = 8;
-  hpcd_USB_FS.Init.speed = PCD_SPEED_FULL;
-  hpcd_USB_FS.Init.phy_itface = PCD_PHY_EMBEDDED;
-  hpcd_USB_FS.Init.low_power_enable = DISABLE;
-  hpcd_USB_FS.Init.battery_charging_enable = DISABLE;
-  if (HAL_PCD_Init(&hpcd_USB_FS) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USB_Init 2 */
-
-  /* USER CODE END USB_Init 2 */
+  /* USER CODE END USART1_Init 2 */
 
 }
 
@@ -513,26 +408,35 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  GPIO_InitStruct.Pin  = GPIO_PIN_0;           // PA0 = ADC1_IN1 on many F3s (e.g., F303RE)
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;     // << IMPORTANT
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-
-  GPIO_InitStruct.Pin       = GPIO_PIN_2 | GPIO_PIN_3;  // PA2 TX, PA3 RX
-  GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull      = GPIO_NOPULL;
-  GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+    if (hadc->Instance == ADC1)
+    {
+        // Read ADC value (12-bit)
+        adc_value = HAL_ADC_GetValue(hadc);
 
+        // Update circular buffer
+        filter_buffer[filter_index] = adc_value;
+        filter_index = (filter_index + 1) % 10;
+
+        // Compute 10-point moving average
+        uint32_t sum = 0;
+        for (int i = 0; i < 10; i++)
+            sum += filter_buffer[i];
+        filtered_value = sum / 10;
+
+        // Transmit both values via UART as: "raw,filtered\r\n"
+        char msg[30];
+        sprintf(msg, "%lu,%lu\r\n", adc_value, filtered_value);
+        HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+    }
+}
 /* USER CODE END 4 */
 
 /**
