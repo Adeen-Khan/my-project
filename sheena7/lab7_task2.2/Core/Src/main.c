@@ -27,11 +27,11 @@
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN PV */
-volatile uint32_t adc_value = 0;
-volatile uint32_t filtered_value = 0;
+volatile uint32_t adc = 0;
+volatile uint32_t filtered = 0;
 
-static uint32_t filter_buffer[10] = {0};  // 10-point moving avg buffer
-static uint8_t  filter_index = 0;
+static uint32_t fbuffer[10] = {0};  // 10-point moving avg buffer
+static uint8_t  findex = 0;
 /* USER CODE END PV */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -419,21 +419,21 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
     if (hadc->Instance == ADC1)
     {
         // Read ADC value (12-bit)
-        adc_value = HAL_ADC_GetValue(hadc);
+        adc = HAL_ADC_GetValue(hadc);
 
         // Update circular buffer
-        filter_buffer[filter_index] = adc_value;
-        filter_index = (filter_index + 1) % 10;
+        fbuffer[findex] = adc;
+        findex = (findex + 1) % 10;
 
         // Compute 10-point moving average
         uint32_t sum = 0;
         for (int i = 0; i < 10; i++)
-            sum += filter_buffer[i];
-        filtered_value = sum / 10;
+            sum += fbuffer[i];
+        filtered = sum / 10;
 
         // Transmit both values via UART as: "raw,filtered\r\n"
         char msg[30];
-        sprintf(msg, "%lu,%lu\r\n", adc_value, filtered_value);
+        sprintf(msg, "%lu,%lu\r\n", adc, filtered);
         HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
     }
 }
