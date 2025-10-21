@@ -34,11 +34,38 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define GYRO_CTRL_REG1     0x20U
+#define GYRO_CTRL_REG4     0x23U
+#define GYRO_OUT_TEMP      0x26U
+#define GYRO_OUT_X_L       0x28U
+#define GYRO_OUT_X_H       0x29U
+#define GYRO_OUT_Y_L       0x2AU
+#define GYRO_OUT_Y_H       0x2BU
+#define GYRO_OUT_Z_L       0x2CU
+#define GYRO_OUT_Z_H       0x2DU
+#define GYRO_WHO_AM_I      0x0FU
 
-#define GYRO_CTRL_REG1   0x20
-#define GYRO_OUT_TEMP    0x26
+#define GYRO_SPI_READ      0x80
+#define GYRO_SPI_AUTOINC   0x40
 
+// Full-scale = ±245 dps (default); LSB sensitivity:
+#define GYRO_SENS_245DPS   0.00875f
 /* USER CODE END PD */
+
+/* USER CODE BEGIN PV */
+// Chip select (keep your PE3)
+#define GYRO_CS_PORT  GPIOE
+#define GYRO_CS_PIN   GPIO_PIN_3
+
+// Temperature calibration (set this to your actual room temp if you want)
+#define CAL_ROOM_C    20
+
+static int8_t  g_t0 = 0;         // baseline raw OUT_TEMP at startup
+static int     g_temp_slope = -1; // LSB/°C; set from WHO (see calib)
+
+// small tx/rx scratch
+static uint8_t txb[8], rxb[8];
+/* USER CODE END PV */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
@@ -76,51 +103,84 @@ static void MX_USB_PCD_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-// CS control on PE3 (active LOW)
-static inline void GYRO_CS_LOW(void)  { HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_RESET); }
-static inline void GYRO_CS_HIGH(void) { HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);  }
+/* USER CODE BEGIN 0 */
+#include <stdio.h>
+#include <string.h>
+
+// CS control (active LOW)
+static inline void GYRO_CS_LOW(void)  { HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_RESET); }
+static inline void GYRO_CS_HIGH(void) { HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);  }
 
 static void uart_print(const char *s)
 {
   HAL_UART_Transmit(&huart2, (uint8_t*)s, (uint16_t)strlen(s), HAL_MAX_DELAY);
 }
 
-// CTRL_REG1 (0x20) = 0x0F  -> PD=1, Xen=1, Yen=1, Zen=1
-static void gyro_init(void)
+// --- SPI register access (blocking, like your colleague) ---
+static void gyro_write_reg(uint8_t reg, uint8_t val)
 {
-  uint8_t frame[2] = { GYRO_CTRL_REG1, 0x0F };  // write (Bit7=0)
   GYRO_CS_LOW();
-  HAL_SPI_Transmit(&hspi1, frame, 2, HAL_MAX_DELAY);
+  txb[0] = (reg & 0x7F);     // write, no auto-inc
+  txb[1] = val;
+  HAL_SPI_Transmit(&hspi1, txb, 2, HAL_MAX_DELAY);
   GYRO_CS_HIGH();
+  HAL_Delay(1);
 }
 
-static void gyro_capture_baseline(void)
+static uint8_t gyro_read_u8(uint8_t reg)
 {
-  uint8_t cmd = (uint8_t)(0x80 | (GYRO_OUT_TEMP & 0x3F));
-  uint8_t r = 0;
-
+  uint8_t cmd = (uint8_t)(reg | GYRO_SPI_READ);  // single byte read
+  uint8_t val = 0;
   GYRO_CS_LOW();
   HAL_SPI_Transmit(&hspi1, &cmd, 1, HAL_MAX_DELAY);
-  HAL_SPI_Receive(&hspi1, &r, 1, HAL_MAX_DELAY);
+  HAL_SPI_Receive(&hspi1, &val, 1, HAL_MAX_DELAY);
   GYRO_CS_HIGH();
-
-  raw0 = (int8_t)r;
+  return val;
 }
 
-
-static void gyro_start_temp_read_IT(void)
+static void gyro_read_regs(uint8_t start_reg, uint8_t *dst, uint16_t len)
 {
-  if (spi_busy) return;
-  spi_busy = 1;
+  uint8_t cmd = (uint8_t)(start_reg | GYRO_SPI_READ | (len > 1 ? GYRO_SPI_AUTOINC : 0));
   GYRO_CS_LOW();
-  if (HAL_SPI_Transmit_IT(&hspi1, &tx_cmd, 1) != HAL_OK)
-  {
-    GYRO_CS_HIGH();
-    spi_busy = 0;
-  }
+  HAL_SPI_Transmit(&hspi1, &cmd, 1, HAL_MAX_DELAY);
+  HAL_SPI_Receive(&hspi1, dst, len, HAL_MAX_DELAY);
+  GYRO_CS_HIGH();
 }
 
+// --- Device init & temperature calibration ---
+static void gyro_init(void)
+{
+  // CTRL_REG1: PD=1, X/Y/Z enable => 0x0F (default ODR)
+  gyro_write_reg(GYRO_CTRL_REG1, 0x0F);
+
+  // (Optional) CTRL_REG4 full-scale; default is ±245 dps, so leave it
+  // gyro_write_reg(GYRO_CTRL_REG4, 0x00);
+
+  HAL_Delay(10);
+}
+
+// Determine slope from WHO and capture baseline OUT_TEMP average
+static void gyro_temp_calibrate(void)
+{
+  uint8_t who = gyro_read_u8(GYRO_WHO_AM_I);
+  // L3GD20 / L3GD20H → WHO 0xD4/0xD7: +1 LSB/°C (datasheet nuance)
+  // I3G4250D         → WHO 0xD3     : -1 LSB/°C
+  if (who == 0xD4 || who == 0xD7) g_temp_slope = +1;
+  else                             g_temp_slope = -1;
+
+  int32_t acc = 0;
+  for (int i = 0; i < 32; i++) {
+    acc += (int8_t)gyro_read_u8(GYRO_OUT_TEMP);
+    HAL_Delay(5);
+  }
+  g_t0 = (int8_t)(acc / 32);
+
+  char msg[80];
+  int n = snprintf(msg, sizeof(msg), "WHO=0x%02X, t0=%d, slope=%d\r\n", who, (int)g_t0, g_temp_slope);
+  HAL_UART_Transmit(&huart2, (uint8_t*)msg, (uint16_t)n, HAL_MAX_DELAY);
+}
 /* USER CODE END 0 */
+
 
 /**
   * @brief  The application entry point.
@@ -156,28 +216,73 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
-HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);
-  HAL_Delay(10);
+// Ensure CS idles HIGH (CubeMX default drives PE3 low)
+HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET); //We force PE3 HIGH after MX_GPIO_Init() so the gyro is deselected when idle
+HAL_Delay(10);
 
-  // Initialize gyro and capture baseline for temperature offset
-  gyro_init();
-  HAL_Delay(20);
-  gyro_capture_baseline();
+/*
+writes CTRL_REG1 (0x20) = 0x0F
+Power on (PD=1) and enable X/Y/Z outputs.
 
-  uart_print("Temp stream (~ASCII degC) every ~100ms\r\n");
+This is the minimum to wake the part; we leave other defaults (ODR, bandwidth, scale).
+*/
+gyro_init();
+/*
+Reads WHO_AM_I (0x0F) once to infer the temperature slope sign:
 
-  /* USER CODE END 2 */
+0xD4 or 0xD7 (L3GD20/D20H) → slope = +1 LSB/°C
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    gyro_start_temp_read_IT();     // non-blocking read start
-    HAL_Delay(100);  
-    /* USER CODE END WHILE */
+0xD3 (I3G4250D) → slope = -1 LSB/°C
 
-    /* USER CODE BEGIN 3 */
-  }
+Averages 32 samples of OUT_TEMP (0x26) to get a stable baseline g_t0.
+
+Prints a short banner with WHO, baseline, slope for visibility.
+
+This step lets us report approximate °C later by anchoring raw counts to a reference.
+*/
+gyro_temp_calibrate();
+
+uart_print("tempC, x(dps*100), y(dps*100), z(dps*100)\r\n");
+/* USER CODE END 2 */
+
+/* USER CODE BEGIN WHILE */
+while (1)
+{
+  // --- Temperature (approx. °C using 1-point calib) ---
+
+  /*
+  The new loop does blocking SPI reads for all axes and temperature — no interrupts, no callbacks.
+
+  This mirrors your colleague’s working code and guarantees coherent readings (temp + X/Y/Z together).
+
+  Interrupt mode was dropped because it complicates sequencing when multiple bytes (X/Y/Z) are needed.
+  */
+  int8_t t_raw = (int8_t)gyro_read_u8(GYRO_OUT_TEMP);
+  int temp_c = CAL_ROOM_C + g_temp_slope * ((int)t_raw - (int)g_t0);
+
+  // --- XYZ burst read with auto-increment ---
+  uint8_t raw[6];
+  gyro_read_regs(GYRO_OUT_X_L, raw, 6);
+  int16_t x_raw = (int16_t)((((uint16_t)raw[1]) << 8) | raw[0]);
+  int16_t y_raw = (int16_t)((((uint16_t)raw[3]) << 8) | raw[2]);
+  int16_t z_raw = (int16_t)((((uint16_t)raw[5]) << 8) | raw[4]);
+
+  // convert to dps (±245 dps) and scale ×100 for integer UART output
+  float x_dps = x_raw * GYRO_SENS_245DPS;
+  float y_dps = y_raw * GYRO_SENS_245DPS;
+  float z_dps = z_raw * GYRO_SENS_245DPS;
+
+  int xi = (int)(x_dps * 100.0f);
+  int yi = (int)(y_dps * 100.0f);
+  int zi = (int)(z_dps * 100.0f);
+
+  char line[96];
+  int n = snprintf(line, sizeof(line), "%d, %d, %d, %d\r\n", temp_c, xi, yi, zi);
+  if (n > 0) HAL_UART_Transmit(&huart2, (uint8_t*)line, (uint16_t)n, HAL_MAX_DELAY);
+
+  HAL_Delay(100); // ~10 Hz
+}
+/* USER CODE END WHILE */
   /* USER CODE END 3 */
 }
 
