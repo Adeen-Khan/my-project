@@ -448,49 +448,32 @@ void LSM303AGR_Init(void)
 void LSM303AGR_ReadRaw(int16_t *x, int16_t *y, int16_t *z)
 {
     uint8_t raw[6];
-    // 0x28 | 0x80 enables auto-increment to read all 6 bytes
     HAL_I2C_Mem_Read(&hi2c1, LSM303AGR_ADDR_READ, 0x28 | 0x80, 1, raw, 6, HAL_MAX_DELAY);
 
     *x = (int16_t)((raw[1] << 8) | raw[0]);
     *y = (int16_t)((raw[3] << 8) | raw[2]);
     *z = (int16_t)((raw[5] << 8) | raw[4]);
 
-    *x = *x >> 6; // 12-bit data
-    *y = *y >> 6;   
+    *x = *x >> 6;   // 12-bit
+    *y = *y >> 6;
     *z = *z >> 6;
-    
-    float ax_g = (*x) * 0.004f;   // 4 mg per LSB = 0.004 g
-    float ay_g = (*y) * 0.004f;
-    float az_g = (*z) * 0.004f;
 
-    float tiltX_deg = atan2f(ay_g, az_g) * 57.2958f;
-    float tiltY_deg = atan2f(-ax_g, sqrtf(ay_g * ay_g + az_g * az_g)) * 57.2958f;
-
-    char msg[128];
-    sprintf(msg, "ACC[g]: %.3f, %.3f, %.3f | Tilt[deg]: %.2f, %.2f\r\n",
-            ax_g, ay_g, az_g, tiltX_deg, tiltY_deg);
+    // INTEGER PRINTING ONLY
+    char msg[64];
+    sprintf(msg, "RAW: %d, %d, %d\r\n", *x, *y, *z);
     HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-
 }
+
 
 // Send integer accelerometer data over UART
 void SendAccelValues(int16_t x_raw, int16_t y_raw, int16_t z_raw)
 {
-    // Convert to acceleration in g (using 4 mg per LSB = 0.004 g)
-    float ax_g = x_raw * 0.004f;
-    float ay_g = y_raw * 0.004f;
-    float az_g = z_raw * 0.004f;
-
-    // Compute tilt angles
-    float tiltX_deg = atan2f(ay_g, az_g) * 57.2958f;
-    float tiltY_deg = atan2f(-ax_g, sqrtf(ay_g * ay_g + az_g * az_g)) * 57.2958f;
-
-    // Print formatted data over UART
-    char msg[128];
-    sprintf(msg, "ACC[g]: %.3f, %.3f, %.3f | Tilt[deg]: %.2f, %.2f\r\n",
-            ax_g, ay_g, az_g, tiltX_deg, tiltY_deg);
+    // INTEGER PRINTING ONLY
+    char msg[64];
+    sprintf(msg, "RAW: %d, %d, %d\r\n", x_raw, y_raw, z_raw);
     HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 }
+
 /* USER CODE END 4 */
 
 /**
