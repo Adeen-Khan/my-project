@@ -6,7 +6,7 @@
 # It is included in the main 'build.ninja'.
 
 # =============================================================================
-# Project: sheen2
+# Project: sheen2.1
 # Configurations: Debug
 # =============================================================================
 # =============================================================================
@@ -14,7 +14,7 @@
 #############################################
 # Rule for compiling ASM files.
 
-rule ASM_COMPILER__sheen2_unscanned_Debug
+rule ASM_COMPILER__sheen2.2e1_unscanned_Debug
   depfile = $DEP_FILE
   deps = gcc
   command = ${LAUNCHER}${CODE_CHECK}/home/shayaanamin/st/stm32cubeclt_1.19.0_2/GNU-tools-for-STM32/bin/arm-none-eabi-gcc $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
@@ -24,7 +24,7 @@ rule ASM_COMPILER__sheen2_unscanned_Debug
 #############################################
 # Rule for compiling C files.
 
-rule C_COMPILER__sheen2_unscanned_Debug
+rule C_COMPILER__sheen2.2e1_unscanned_Debug
   depfile = $DEP_FILE
   deps = gcc
   command = ${LAUNCHER}${CODE_CHECK}/home/shayaanamin/st/stm32cubeclt_1.19.0_2/GNU-tools-for-STM32/bin/arm-none-eabi-gcc $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
@@ -34,7 +34,7 @@ rule C_COMPILER__sheen2_unscanned_Debug
 #############################################
 # Rule for linking C executable.
 
-rule C_EXECUTABLE_LINKER__sheen2_Debug
+rule C_EXECUTABLE_LINKER__sheen2.2e1_Debug
   command = $PRE_LINK && /home/shayaanamin/st/stm32cubeclt_1.19.0_2/GNU-tools-for-STM32/bin/arm-none-eabi-gcc $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD
   description = Linking C executable $TARGET_FILE
   restat = $RESTAT

@@ -21,7 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "string.h"     //for strlen
+#include "my_printf.h"//custom printf header
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -77,6 +78,8 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 
+  
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -107,19 +110,50 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  const char *msg = "Hello, World!\r\n";
+
+  // int x = 42;
+  // float y = 3.14f;
   while (1)
   {
-
-  
-    HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-    HAL_Delay(1000); 
     /* USER CODE END WHILE */
+    // myPrintf("Value of x=%d, y=%.2f\r\n", x, y); // task1
+    // HAL_Delay(1000); //task 1 and 2
+
 
     /* USER CODE BEGIN 3 */
+      //task 3
+char str[] = "Microcontrollers";
+int key = 8774;
+int len = strlen(str);
+
+myPrintf("Original: %s\r\n", str);
+
+myPrintf("Encrypted (ASCII): ");
+for (int i = 0; i < len; i++) {
+unsigned char ch = str[i] + (key % 256);
+myPrintf("%d ", ch);
+str[i] = ch;
+
+}
+myPrintf("\r\n");
+
+for (int i = 0; i < len; i++) {
+str[i] = str[i] - (key % 256);
+
+}
+
+myPrintf("Decrypted: %s\r\n", str);
+
+HAL_Delay(500);
+
+}
+
+
+
   }
   /* USER CODE END 3 */
-}
+
+
 
 /**
   * @brief System Clock Configuration
